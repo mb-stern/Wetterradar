@@ -142,6 +142,9 @@ Feedback, Verbesserungsvorschläge und Pull Requests sind jederzeit willkommen.
 
 ## Versionen
 
+**Version 1.3 (03.08.2026)**
+* Vorschau mit Rainbow nun bis 4 Stunden möglich. Der Wert ist konfigurierbar. Achtung hoher API-Call Verbrauch.
+
 **Version 1.2 (14.07.2026)**
 * Neuer Radar-Provider 'Meteo Swiss' liefert Bilder im fünf Minuten Abstand, leider nur rings um die Schweiz.
 * Vereinheitlichung der Farben über alle Radar-Provider und Anzeige der Regenmenge in Millimeter.
