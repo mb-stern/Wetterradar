@@ -14,6 +14,7 @@ class Regenradar extends IPSModuleStrict
 
         $this->RegisterPropertyString('RadarProvider', 'rainviewer');
         $this->RegisterPropertyString('RainbowApiKey', '');
+        $this->RegisterPropertyInteger('RainbowForecastHours', 1);
         $this->RegisterPropertyInteger('RadarRefreshSeconds', 600);
         $this->RegisterPropertyBoolean('EnableAutoplay', false);
         $this->RegisterPropertyBoolean('ShowTileDebug', false);
@@ -152,6 +153,17 @@ class Regenradar extends IPSModuleStrict
                             ],
                         ],
                         ['type' => 'ValidationTextBox', 'name' => 'RainbowApiKey', 'caption' => 'Rainbow API-Key'],
+                        [
+                            'type' => 'Select',
+                            'name' => 'RainbowForecastHours',
+                            'caption' => 'Rainbow Zukunftsvorschau',
+                            'options' => [
+                                ['caption' => '1 Stunde', 'value' => 1],
+                                ['caption' => '2 Stunden', 'value' => 2],
+                                ['caption' => '3 Stunden', 'value' => 3],
+                                ['caption' => '4 Stunden', 'value' => 4],
+                            ],
+                        ],
                         ['type' => 'NumberSpinner', 'name' => 'RadarRefreshSeconds', 'caption' => 'Radar aktualisieren alle Sekunden', 'minimum' => 60],
                         ['type' => 'CheckBox', 'name' => 'EnableAutoplay', 'caption' => 'Autoplay aktivieren'],
                         ['type' => 'CheckBox', 'name' => 'ShowTileDebug', 'caption' => 'Tile-Debug im HTML anzeigen'],
@@ -1416,11 +1428,17 @@ function wrRenderRadar(payload) {
         slider.value = '0';
     }
 
-    // wie im Script: Rainviewer startet beim letzten Past-Frame; Rainbow in der Mitte der Timeline.
+    // RainViewer und MeteoSwiss zeigen den neuesten vorhandenen Messframe.
+    // Rainbow startet unabhängig von der konfigurierten Zukunftsdauer exakt beim Snapshot "jetzt".
     if (payload.provider === 'rainviewer' || payload.provider === 'meteoswiss') {
         wrFrameIndex = wrFrames.length - 1;
+    } else if (payload.provider === 'rainbow' && payload.snapshot) {
+        const currentIndex = wrFrames.findIndex(function(frame) {
+            return Number(frame.time) === Number(payload.snapshot);
+        });
+        wrFrameIndex = currentIndex >= 0 ? currentIndex : 0;
     } else {
-        wrFrameIndex = Math.floor(wrFrames.length / 2);
+        wrFrameIndex = 0;
     }
 
     wrShowFrame(wrFrameIndex);
@@ -2099,7 +2117,9 @@ HTML;
         }
 
         $pastSteps = [-3600, -3000, -2400, -1800, -1200, -600];
-        $forecastSteps = [0, 600, 1200, 1800, 2400, 3000, 3600];
+        // Rainbow unterstützt Zukunftsframes in 10-Minuten-Schritten bis maximal 4 Stunden.
+        $forecastHours = max(1, min(4, $this->ReadPropertyInteger('RainbowForecastHours')));
+        $forecastSteps = range(0, $forecastHours * 3600, 600);
         $frames = [];
 
         foreach ($pastSteps as $step) {
@@ -2119,7 +2139,8 @@ HTML;
 
         $this->SendDebug(
             'BuildRainbowPayload',
-            'Rainbow Snapshot=' . $snapshot . ', Layer=' . $layer . ', Color=' . $color . ', Frames=' . count($frames),
+            'Rainbow Snapshot=' . $snapshot . ', Layer=' . $layer . ', Color=' . $color .
+            ', Zukunft=' . $forecastHours . ' h, Frames=' . count($frames),
             0
         );
 
