@@ -2226,33 +2226,31 @@ HTML;
 
             $this->SendDebug(
                 'GetLocation',
-                'OpenWeatherOneCall enthält keine gültige Location. Symcon Location Control wird verwendet.',
+                'OpenWeatherOneCall enthält keine gültige Location. Symcon SelectLocation wird verwendet.',
                 0
             );
         } else {
             $this->SendDebug(
                 'GetLocation',
-                'Keine OpenWeatherOneCall-Instanz gewählt. Symcon Location Control wird verwendet.',
+                'Keine OpenWeatherOneCall-Instanz gewählt. Symcon SelectLocation wird verwendet.',
                 0
             );
         }
 
-        // 2. Fallback auf die Symcon-Kerninstanz "Location Control".
-        $locationControlIDs = @IPS_GetInstanceListByModuleID(
+        // 2. Fallback auf die Symcon-Kerninstanz "SelectLocation".
+        $selectLocationIDs = @IPS_GetInstanceListByModuleID(
             '{45E97A63-F870-408A-B259-2933F7EABF74}'
         );
 
-        if (is_array($locationControlIDs) && count($locationControlIDs) > 0) {
-            $locationControlID = (int) $locationControlIDs[0];
-
-            // Seit IP-Symcon 5.0: JSON-Property "Location".
-            $locationJson = @IPS_GetProperty($locationControlID, 'Location');
+        if (is_array($selectLocationIDs) && count($selectLocationIDs) > 0) {
+            $selectLocationID = (int) $selectLocationIDs[0];
+            $locationJson = @IPS_GetProperty($selectLocationID, 'Location');
             $location = json_decode((string) $locationJson, true);
 
             if ($this->HasValidCoordinates($location)) {
                 $this->SendDebug(
                     'GetLocation',
-                    'Standort aus Symcon Location Control ID ' . $locationControlID . ' verwendet: ' .
+                    'Standort aus Symcon SelectLocation ID ' . $selectLocationID . ' verwendet: ' .
                     $location['latitude'] . ', ' . $location['longitude'],
                     0
                 );
@@ -2260,34 +2258,16 @@ HTML;
                 return [(float) $location['latitude'], (float) $location['longitude']];
             }
 
-            // Kompatibilitäts-Fallback für sehr alte Symcon-Versionen.
-            $latitude = @IPS_GetProperty($locationControlID, 'Latitude');
-            $longitude = @IPS_GetProperty($locationControlID, 'Longitude');
-            $legacyLocation = [
-                'latitude' => $latitude,
-                'longitude' => $longitude
-            ];
-
-            if ($this->HasValidCoordinates($legacyLocation)) {
-                $this->SendDebug(
-                    'GetLocation',
-                    'Standort aus den alten Location-Control-Properties verwendet.',
-                    0
-                );
-
-                return [(float) $latitude, (float) $longitude];
-            }
-
             $this->SendDebug(
                 'GetLocation',
-                'Location Control ID ' . $locationControlID . ' enthält keine gültigen Koordinaten. Location=' .
+                'SelectLocation ID ' . $selectLocationID . ' enthält keine gültigen Koordinaten. Location=' .
                 (string) $locationJson,
                 0
             );
         } else {
             $this->SendDebug(
                 'GetLocation',
-                'Keine Symcon Location-Control-Instanz mit der erwarteten GUID gefunden.',
+                'Keine Symcon SelectLocation-Instanz mit der erwarteten GUID gefunden.',
                 0
             );
         }
