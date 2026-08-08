@@ -142,6 +142,9 @@ Feedback, Verbesserungsvorschläge und Pull Requests sind jederzeit willkommen.
 
 ## Versionen
 
+**Version 1.4 (08.08.2026)**
+* Codebereinigung nach Store-Review.
+
 **Version 1.3 (03.08.2026)**
 * Vorschau mit Rainbow nun bis 4 Stunden möglich. Der Wert ist konfigurierbar. Achtung hoher API-Call Verbrauch.
 
